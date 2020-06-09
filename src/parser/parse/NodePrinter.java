@@ -45,14 +45,14 @@ public class NodePrinter {
             	else if(ln.cdr().car() == null)
             		printNode(ln.car());
             	else {
-	            	sb.append("( ");
+	            	sb.append("(");
 	            	printList(ln);
 	            	sb.append(" ) ");
             	}	
             }
         } 
         
-        else sb.append("[" + node + "] ");
+        else sb.append(" "+node);
     }
 
     public void prettyPrint() {

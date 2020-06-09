@@ -9,6 +9,8 @@ import java.util.Scanner;
 
 public class CuteInterpreter {
 
+	private Node[] table = new Node[123];
+
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 //		ClassLoader cloader = ParserMain.class.getClassLoader();
@@ -17,13 +19,12 @@ public class CuteInterpreter {
 //		);
 //      String str = new String("(+ 3 2 )");
 		Scanner sc = new Scanner(System.in);
-		System.out.println("-1을 입력하면 종료");
+		CuteInterpreter interpreter = new CuteInterpreter();
         while(true){
 			System.out.print("$ ");
 			String input = sc.nextLine();
 
 			CuteParser cuteParser = new CuteParser(input);
-			CuteInterpreter interpreter = new CuteInterpreter();
 			Node parseTree = cuteParser.parseExpr();
 			Node resultNode = interpreter.runExpr(parseTree);
 			NodePrinter nodePrinter = new NodePrinter(resultNode);
@@ -40,13 +41,15 @@ public class CuteInterpreter {
 	private Node runExpr(Node rootExpr) {
 		// TODO Auto-generated method stub
 		if (rootExpr == null)  return null;
-		if (rootExpr instanceof IdNode) return rootExpr;
+		if (rootExpr instanceof IdNode) return lookupTable(((IdNode)rootExpr).toString());
 		else if (rootExpr instanceof IntNode) return rootExpr;
 		else if (rootExpr instanceof BooleanNode) return rootExpr;
 		else if (rootExpr instanceof ListNode) return runList((ListNode) rootExpr);
 		else errorLog("run Expr error");
 		return null;
 	}
+
+
 
 	private Node runList(ListNode list) {
 		// TODO Auto-generated method stub
@@ -66,19 +69,33 @@ public class CuteInterpreter {
 		if (operand == null) return null;
 		switch(operator.funcType) {
 			case CDR:
-				Node checked_node = runExpr(operand);//내부에 function이나 연산자가 있는지 체크 
+				Node checked_node = runExpr(operand);//내부에 function이나 연산자가 있는지 체크
+
+				if (((ListNode)checked_node).car() instanceof IdNode){
+					checked_node = runExpr(((ListNode)checked_node).car());
+				}
 				if (((ListNode)checked_node).car() instanceof QuoteNode) {
 					checked_node = ((ListNode)checked_node).cdr();//'를 뺀 그냥거
 				}
+
 				return ((ListNode) checked_node).cdr();
 			case CAR:
-				Node checked_node_car = runExpr(operand);//내부에 function이나 연산자가 있는지 체크 
+				Node checked_node_car = runExpr(operand);//내부에 function이나 연산자가 있는지 체크
+
+				if (((ListNode)checked_node_car).car() instanceof IdNode){
+					checked_node_car = runExpr(((ListNode)checked_node_car).car());
+				}
 				if (((ListNode)checked_node_car).car() instanceof QuoteNode) {
 					checked_node_car = ((ListNode)checked_node_car).cdr();//'를 뺀 그냥거
 				}
+
 				return ((ListNode) checked_node_car).car();
 //			case CONS:
-//			case DEFINE:
+			case DEFINE:
+				Node define_node = runExpr(operand); //리스트 노드 체크
+				Node letter = ((ListNode)define_node).car();//list.car은 연산자 그담 첫 원소가 첫 숫자
+				Node Num = runExpr(((ListNode)define_node).cdr().car());
+				insertTable(((IdNode)letter).toString(), Num);
 //			case LAMBDA:
 //			case COND:
 //			case NOT:
@@ -133,5 +150,17 @@ public class CuteInterpreter {
 		else return node;
 	}
 
+	private Node lookupTable(String id) {
+		char char_id = id.charAt(0);
+		if(table[(int)char_id] == null){
+			return new IdNode(id);
+		}
+		return table[(int)char_id];
+	}
+
+	private void insertTable(String id, Node value){
+		char char_id = id.charAt(0);
+		table[(int)char_id] = value;
+	}
 
 }

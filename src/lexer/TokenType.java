@@ -16,7 +16,7 @@ public enum TokenType {
 		switch ( ch ) {
 			case '+':
 				return PLUS;
-			//³ª¸ÓÁö Special Charactor¿¡ ´ëÇØ ÅäÅ«À» ¹ÝÈ¯ÇÏµµ·Ï ÀÛ¼º
+			//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Special Charactorï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Å«ï¿½ï¿½ ï¿½ï¿½È¯ï¿½Ïµï¿½ï¿½ï¿½ ï¿½Û¼ï¿½
 			case '-': return MINUS;
 			case '*': return TIMES;
 			case '/': return DIV;

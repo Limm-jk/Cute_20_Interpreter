@@ -1,10 +1,10 @@
 package interpreter.cute;
 
-import java.io.File;
 
 import lexer.TokenType;
 import parser.parse.*;
 import parser.ast.*;
+
 import java.util.Scanner;
 
 public class CuteInterpreter {
@@ -90,18 +90,99 @@ public class CuteInterpreter {
 				}
 
 				return ((ListNode) checked_node_car).car();
-//			case CONS:
+			case CONS:
+				Node cons_head = runExpr(operand.car());//원소
+				Node cons_tail = runExpr(operand.cdr().car());//뒤 리스트
+
+				if (cons_head instanceof ListNode && ((ListNode)cons_head).car() instanceof IdNode){
+					cons_head = runExpr(((ListNode)cons_head).car());
+				}
+				if (((ListNode)cons_tail).car() instanceof IdNode){
+					cons_tail = runExpr(((ListNode)cons_tail).car());
+				}
+
+				if (cons_head instanceof ListNode && ((ListNode) cons_head).car() instanceof QuoteNode)
+					cons_head = runExpr(((ListNode)cons_head).cdr());
+				if (((ListNode) cons_tail).car() instanceof QuoteNode)
+					cons_tail = runExpr(((ListNode)cons_tail).cdr());
+
+				return ListNode.cons(cons_head, (ListNode)cons_tail);
 			case DEFINE:
 				Node define_node = runExpr(operand); //리스트 노드 체크
 				Node letter = ((ListNode)define_node).car();//list.car은 연산자 그담 첫 원소가 첫 숫자
 				Node Num = runExpr(((ListNode)define_node).cdr().car());
 				insertTable(((IdNode)letter).toString(), Num);
+
+				return null;
 //			case LAMBDA:
-//			case COND:
-//			case NOT:
-//			case EQ_Q:
-//			case NULL_Q:
-//			case ATOM_Q:
+			case COND:
+				if(runExpr(((ListNode)operand.car()).car()) == BooleanNode.TRUE_NODE){
+					if (((ListNode)operand.car()).cdr().car() instanceof IdNode)
+						return runExpr(((ListNode)operand.car()).cdr().car());
+					return runExpr(((ListNode)operand.car()).cdr());
+				}
+				else{
+					return runFunction(operator, operand.cdr());
+				}
+
+			case NOT:
+				Node not_node = runExpr(operand);
+				if (((ListNode)not_node).car() instanceof IdNode){
+					not_node = runExpr(((ListNode)not_node).car());
+				}
+				if (not_node == BooleanNode.TRUE_NODE)
+					return BooleanNode.FALSE_NODE;
+				return BooleanNode.TRUE_NODE;
+			case EQ_Q:
+				Node node1 = runExpr(operand.car());//원소
+				Node node2 = runExpr(operand.cdr().car());//뒤 리스트
+
+//				if (node1 instanceof ListNode && ((ListNode)node1).car() instanceof IdNode){
+//					node1 = runExpr(((ListNode)node1).car());
+//				}
+//				if (node2 instanceof ListNode && ((ListNode)node2).car() instanceof IdNode){
+//					node2 = runExpr(((ListNode)node2).car());
+//				}
+
+				if (node1 instanceof ListNode && ((ListNode) node1).car() instanceof QuoteNode)
+					node1 = runExpr(((ListNode)node1).cdr());
+				if (((ListNode) node2).car() instanceof QuoteNode)
+					node2 = runExpr(((ListNode)node2).cdr());
+
+				if(node1.equals(node2)) return BooleanNode.TRUE_NODE;
+				else return BooleanNode.FALSE_NODE;
+
+			case NULL_Q:
+				Node null_node = runExpr(operand);
+
+				if (((ListNode)null_node).car() instanceof IdNode){
+					null_node = runExpr(((ListNode)null_node).car());
+				}
+				if (((ListNode) null_node).car() instanceof QuoteNode)
+					null_node = runExpr(((ListNode)null_node).cdr());
+
+				if (((ListNode)null_node).car() == null) // 리스트가 null
+					return BooleanNode.TRUE_NODE;
+				else // 리스트가 null이 아님
+					return BooleanNode.FALSE_NODE;
+			case ATOM_Q:
+				Node atom_node = runExpr(operand); // 노드를 확인
+
+				if (((ListNode)atom_node).car() instanceof IdNode){
+					atom_node = runExpr(((ListNode)atom_node).car());
+				}
+				if (!(((ListNode)atom_node).car() instanceof QuoteNode) && ((ListNode)atom_node).cdr().car() == null){
+					return BooleanNode.TRUE_NODE;
+				}
+				if (((ListNode) atom_node).car() instanceof QuoteNode) // ListNode확인
+					atom_node = runExpr(((ListNode)atom_node).cdr());
+
+				if (atom_node instanceof ListNode && atom_node == ListNode.EMPTYLIST)
+					return BooleanNode.TRUE_NODE;
+				else if (atom_node instanceof ListNode && ((ListNode)atom_node).car() != null)
+					return BooleanNode.FALSE_NODE;
+				else //그외 리스트가 아니거나 null이거나
+					return BooleanNode.TRUE_NODE;
 			default:
 				break;
 		}
